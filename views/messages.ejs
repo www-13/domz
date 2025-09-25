@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Domz</title>
+    <link rel="stylesheet" href="/css/messages.css">
+    <link rel="icon" href="/img/domz logo without text.png">
+</head>
+<body>
+    <a href="/dashboard" class="nav-link">← Back to Dashboard</a>
+    
+    <div class="container">
+        <!-- Sidebar - User List -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Messages</h2>
+                <p>Hi, <%= currentUser.username %></p>
+                <button class="mobile-close-btn" id="mobileCloseBtn">✕</button>
+            </div>
+            
+            <div class="user-search">
+                <input type="text" id="userSearch" placeholder="Search users...">
+            </div>
+            
+            <div class="user-list" id="userList">
+                <% users.forEach(user => { %>
+                    <div class="user-item" data-user-id="<%= user._id %>" data-username="<%= user.username %>">
+                        <div class="user-avatar">
+                            <%= user.username.charAt(0).toUpperCase() %>
+                            <% if (user.isOnline) { %>
+                                <div class="online-indicator"></div>
+                            <% } %>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name"><%= user.username %></div>
+                            <div class="user-status">
+                                <%= user.isOnline ? 'Online' : 'Last seen ' + new Date(user.lastSeen).toLocaleDateString() %>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <div style="visibility: hidden;" id="welcomeScreen" class="welcome-screen">
+                <div class="welcome-icon">💬</div>
+                <h3>Welcome to Messages</h3>
+                <p>Select a user from the sidebar to start chatting</p>
+            </div>
+            
+            <div id="chatContainer" style="display: none; height: 100%; display: flex; flex-direction: column;">
+                <div class="chat-header" id="chatHeader">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                    <div class="user-avatar" id="chatUserAvatar">U</div>
+                    <div class="chat-user-info">
+                        <h3 id="chatUserName">Select a user</h3>
+                        <div class="chat-user-status" id="chatUserStatus">Online</div>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messagesContainer">
+                    <div class="loading" id="loadingMessages">Loading messages...</div>
+                </div>
+                
+                <div class="message-input-area">
+                    <form id="messageForm" class="input-container">
+                        <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                        <button type="submit" class="send-btn" id="sendBtn">
+                            <span>→</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!--js linking-->
+    <script>
+                // Initialize Socket.IO
+                const socket = io();
+        
+        // Current user and chat state
+        const currentUserId = '<%= currentUserId %>';
+        const currentUsername = '<%= currentUser.username %>';
+        let selectedUserId = null;
+        let selectedUsername = null;
+        
+        // DOM elements
+        const userList = document.getElementById('userList');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserStatus = document.getElementById('chatUserStatus');
+        const chatUserAvatar = document.getElementById('chatUserAvatar');
+        const userSearch = document.getElementById('userSearch');
+        
+        // IndexedDB setup
+        let db;
+        const initDB = () => {
+            const request = indexedDB.open('ChatDB', 1);
+            
+            request.onerror = () => console.error('IndexedDB error');
+            
+            request.onsuccess = (e) => {
+                db = e.target.result;
+            };
+            
+            request.onupgradeneeded = (e) => {
+                db = e.target.result;
+                
+                // Messages store
+                if (!db.objectStoreNames.contains('messages')) {
+                    const messagesStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+                    messagesStore.createIndex('chatId', 'chatId', { unique: false });
+                    messagesStore.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+                
+                // Users store
+                if (!db.objectStoreNames.contains('users')) {
+                    const usersStore = db.createObjectStore('users', { keyPath: '_id' });
+                }
+            };
+        };
+
+        // Save message to IndexedDB
+        const saveMessageToLocal = (message, chatId) => {
+            if (!db) return;
+            
+            const transaction = db.transaction(['messages'], 'readwrite');
+            const store = transaction.objectStore('messages');
+            
+            const localMessage = {
+                ...message,
+                chatId: chatId,
+                timestamp: new Date(message.createdAt).getTime(),
+                synced: true
+            };
+            
+            store.add(localMessage);
+        };
+
+        // Load messages from IndexedDB
+        const loadMessagesFromLocal = (chatId) => {
+            return new Promise((resolve) => {
+                if (!db) {
+                    resolve([]);
+                    return;
+                }
+                
+                const transaction = db.transaction(['messages'], 'readonly');
+                const store = transaction.objectStore('messages');
+                const index = store.index('chatId');
+                const request = index.getAll(chatId);
+                
+                request.onsuccess = () => {
+                    const messages = request.result.sort((a, b) => a.timestamp - b.timestamp);
+                    resolve(messages);
+                };
+                
+                request.onerror = () => resolve([]);
+            });
+        };
+
+        // Initialize IndexedDB
+        initDB();
+        
+        // Socket event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('user-connected', {
+                userId: currentUserId,
+                username: currentUsername
+            });
+        });
+        
+        socket.on('user-status-update', (data) => {
+            updateUserStatus(data.userId, data.isOnline, data.lastSeen);
+        });
+        
+        socket.on('new-message', (message) => {
+            if (selectedUserId && 
+                (message.sender._id === selectedUserId || message.recipient._id === selectedUserId)) {
+                displayMessage(message);
+                const chatId = getChatId(currentUserId, selectedUserId);
+                saveMessageToLocal(message, chatId);
+            }
+        });
+        
+        socket.on('message-delivered', (data) => {
+            // Update message delivery status
+            console.log('Message delivered:', data);
+        });
+        
+        // User selection
+        userList.addEventListener('click', async (e) => {
+            const userItem = e.target.closest('.user-item');
+            if (!userItem) return;
+            
+            // Remove active class from all items
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected item
+            userItem.classList.add('active');
+            
+            // Set selected user
+            selectedUserId = userItem.dataset.userId;
+            selectedUsername = userItem.dataset.username;
+            
+            // Update chat header
+            chatUserName.textContent = selectedUsername;
+            chatUserAvatar.textContent = selectedUsername.charAt(0).toUpperCase();
+            
+            // Show chat container
+            welcomeScreen.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            
+            // Load messages
+            await loadMessages();
+            
+            // Join chat room
+            socket.emit('join-chat', {
+                senderId: currentUserId,
+                recipientId: selectedUserId
+            });
+        });
+        
+        // Load messages for selected user
+        const loadMessages = async () => {
+            if (!selectedUserId) return;
+            
+            const loadingElement = document.getElementById('loadingMessages');
+            loadingElement.style.display = 'block';
+            messagesContainer.innerHTML = '<div class="loading" id="loadingMessages">Loading messages...</div>';
+            
+            try {
+                // First, try to load from IndexedDB
+                const chatId = getChatId(currentUserId, selectedUserId);
+                const localMessages = await loadMessagesFromLocal(chatId);
+                
+                if (localMessages.length > 0) {
+                    messagesContainer.innerHTML = '';
+                    localMessages.forEach(message => {
+                        displayMessage(message);
+                    });
+                }
+                
+                // Then fetch from server
+                const response = await fetch(`/api/messages/${selectedUserId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    messagesContainer.innerHTML = '';
+                    
+                    messages.forEach(message => {
+                        displayMessage(message);
+                        saveMessageToLocal(message, chatId);
+                    });
+                    
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } else {
+                    messagesContainer.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">Error loading messages</div>';
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                messagesContainer.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">Error loading messages</div>';
+            }
+        };
+        
+        // Display a message in the chat
+        const displayMessage = (message) => {
+            const isOwnMessage = message.sender._id === currentUserId;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwnMessage ? 'own' : ''}`;
+            
+            const time = new Date(message.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const senderName = message.sender.username || message.sender;
+            const avatarLetter = (typeof senderName === 'string' ? senderName : currentUsername).charAt(0).toUpperCase();
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarLetter}</div>
+                <div class="message-content">
+                    <div class="message-text">${escapeHtml(message.content)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+        
+        // Send message
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const content = messageInput.value.trim();
+            if (!content || !selectedUserId) return;
+            
+            // Create message object
+            const message = {
+                sender: { _id: currentUserId, username: currentUsername },
+                recipient: { _id: selectedUserId, username: selectedUsername },
+                content: content,
+                createdAt: new Date().toISOString(),
+                messageType: 'text'
+            };
+            
+            // Display message immediately
+            displayMessage(message);
+            
+            // Save to IndexedDB
+            const chatId = getChatId(currentUserId, selectedUserId);
+            saveMessageToLocal(message, chatId);
+            
+            // Send via socket
+            socket.emit('send-message', {
+                senderId: currentUserId,
+                recipientId: selectedUserId,
+                content: content
+            });
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.focus();
+        });
+        
+        // Auto-resize textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+        });
+        
+        // User search functionality
+        userSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const userItems = document.querySelectorAll('.user-item');
+            
+            userItems.forEach(item => {
+                const username = item.dataset.username.toLowerCase();
+                if (username.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Update user online status
+        const updateUserStatus = (userId, isOnline, lastSeen) => {
+            const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+            if (!userItem) return;
+            
+            const avatar = userItem.querySelector('.user-avatar');
+            const statusElement = userItem.querySelector('.user-status');
+            const onlineIndicator = avatar.querySelector('.online-indicator');
+            
+            if (isOnline) {
+                if (!onlineIndicator) {
+                    avatar.innerHTML += '<div class="online-indicator"></div>';
+                }
+                statusElement.textContent = 'Online';
+            } else {
+                if (onlineIndicator) {
+                    onlineIndicator.remove();
+                }
+                statusElement.textContent = `Last seen ${new Date(lastSeen).toLocaleDateString()}`;
+            }
+            
+            // Update chat header if this is the selected user
+            if (selectedUserId === userId) {
+                chatUserStatus.textContent = isOnline ? 'Online' : `Last seen ${new Date(lastSeen).toLocaleDateString()}`;
+            }
+        };
+        
+        // Helper functions
+        const getChatId = (userId1, userId2) => {
+            return [userId1, userId2].sort().join('-');
+        };
+        
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
+        // Handle page visibility for user status
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                socket.emit('user-active', currentUserId);
+            } else {
+                socket.emit('user-inactive', currentUserId);
+            }
+        });
+        
+        // Handle beforeunload
+        window.addEventListener('beforeunload', () => {
+            socket.emit('user-disconnected', currentUserId);
+        });
+
+       // Mobile navigation functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileCloseBtn = document.getElementById('mobileCloseBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    function showSidebar() {
+        sidebar.classList.add('show');
+        mobileOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideSidebar() {
+        sidebar.classList.remove('show');
+        mobileOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // Menu button click
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', showSidebar);
+    }
+
+    // Close button click
+    if (mobileCloseBtn) {
+        mobileCloseBtn.addEventListener('click', hideSidebar);
+    }
+
+    // Overlay click to close
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', hideSidebar);
+    }
+
+    // Close sidebar when user is selected on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && e.target.closest('.user-item')) {
+            setTimeout(hideSidebar, 300); // Small delay for better UX
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            hideSidebar();
+        }
+    });
+});
+    </script>
+</body>
+</html>
