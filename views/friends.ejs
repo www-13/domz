@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/friends.css">
+    <link rel="icon" href="/img/domz logo without text.png">
+    <title>Domz - Friends</title>
+</head>
+<body>
+    <div class="friends-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><img width="50px" style="border-radius: 50%;" src="/img/domz logo without text.png" alt="" onerror="this.style.display='none'; this.nextElementSibling.textContent='D'"></div>
+                <span class="logo-text">Domz</span>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/createPost" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            Create Post
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/messages" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                            Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/friends" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                            </svg>
+                            Friends
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/profile" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Friends</h1>
+                <p>Connect with people and manage your friend requests</p>
+                <a style="text-decoration: none; color: #111; font-weight: bold;" href="/dashboard">Back to Dashboard</a>
+            </header>
+
+            <div class="friends-grid">
+                <!-- Find Friends Section -->
+                <section class="friends-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="section-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            Discover People
+                        </h2>
+                    </div>
+
+                    <div class="search-container">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" class="search-input" placeholder="Search for people by name or username...">
+                        </div>
+                    </div>
+
+                    <div class="friends-list" id="suggestedUsersList">
+                        <% if (suggestedUsers && suggestedUsers.length > 0) { %>
+                            <% suggestedUsers.forEach(user => { %>
+                                <div class="friend-card" data-user-id="<%= user._id %>">
+                                    <div class="friend-avatar">
+                                        <%= user.username.charAt(0).toUpperCase() %>
+                                        <% if (user.isOnline) { %>
+                                            <div class="online-indicator"></div>
+                                        <% } %>
+                                    </div>
+                                    <div class="friend-info">
+                                        <div class="friend-name"><%= user.username %></div>
+                                        <div class="friend-status"><%= user.email %></div>
+                                        <div class="mutual-friends" id="mutual-<%= user._id %>">Loading...</div>
+                                    </div>
+                                    <div class="friend-actions">
+                                        <button class="action-btn btn-primary add-friend-btn" data-user-id="<%= user._id %>">
+                                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                            </svg>
+                                            Add Friend
+                                        </button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24">
+                                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                                </svg>
+                                <h3>No users found</h3>
+                                <p>Try searching for specific users</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </section>
+
+                <!-- Friend Requests Section -->
+                <section class="friends-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="section-icon" viewBox="0 0 24 24">
+                                <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                            </svg>
+                            Friend Requests
+                        </h2>
+                        <span class="section-count" id="requestsCount"><%= friendRequests ? friendRequests.length : 0 %></span>
+                    </div>
+
+                    <div class="friends-list" id="friendRequestsList">
+                        <% if (friendRequests && friendRequests.length > 0) { %>
+                            <% friendRequests.forEach(request => { %>
+                                <div class="friend-card" data-request-id="<%= request._id %>">
+                                    <div class="friend-avatar">
+                                        <%= request.requester.username.charAt(0).toUpperCase() %>
+                                        <% if (request.requester.isOnline) { %>
+                                            <div class="online-indicator"></div>
+                                        <% } %>
+                                    </div>
+                                    <div class="friend-info">
+                                        <div class="friend-name"><%= request.requester.username %></div>
+                                        <div class="friend-status"><%= request.requester.email %></div>
+                                        <div class="mutual-friends" id="mutual-req-<%= request.requester._id %>">Loading...</div>
+                                    </div>
+                                    <div class="friend-actions">
+                                        <button class="action-btn btn-success accept-friend-btn" data-request-id="<%= request._id %>">
+                                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </svg>
+                                            Accept
+                                        </button>
+                                        <button class="action-btn btn-danger decline-friend-btn" data-request-id="<%= request._id %>">
+                                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                            </svg>
+                                            Decline
+                                        </button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24">
+                                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                                </svg>
+                                <h3>No friend requests</h3>
+                                <p>No pending friend requests at the moment</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="/dashboard" class="mobile-nav-item active">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="mobile-nav-text">Home</span>
+            </a>
+            <a href="/create-post" class="mobile-nav-item">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                <span class="mobile-nav-text">Create Post</span>
+            </a>
+            <a href="/friends" class="mobile-nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                </svg>
+                <span class="mobile-nav-text">Friends</span>
+            </a>
+            <a href="/messages" class="mobile-nav-item">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span class="mobile-nav-text">Messages</span>
+            </a>
+            <a href="/profile" class="mobile-nav-item">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <span class="mobile-nav-text">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Current user ID
+        const currentUserId = '<%= currentUserId %>';
+        
+        // Load mutual friends counts
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load mutual friends for suggested users
+            const suggestedUsers = document.querySelectorAll('#suggestedUsersList [data-user-id]');
+            for (const userCard of suggestedUsers) {
+                const userId = userCard.dataset.userId;
+                await loadMutualFriends(userId, `mutual-${userId}`);
+            }
+            
+            // Load mutual friends for friend requests
+            const requestUsers = document.querySelectorAll('#friendRequestsList [data-request-id]');
+            for (const requestCard of requestUsers) {
+                const userId = requestCard.querySelector('.friend-info .mutual-friends').id.replace('mutual-req-', '');
+                await loadMutualFriends(userId, `mutual-req-${userId}`);
+            }
+        });
+        
+        // Load mutual friends count
+        const loadMutualFriends = async (userId, elementId) => {
+            try {
+                const response = await fetch(`/api/friends/mutual/${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.textContent = data.mutualCount > 0 ? `${data.mutualCount} mutual friends` : 'No mutual friends';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading mutual friends:', error);
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = 'No mutual friends';
+                }
+            }
+        };
+        
+        // Add friend request
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.add-friend-btn')) {
+                const button = e.target.closest('.add-friend-btn');
+                const userId = button.dataset.userId;
+                
+                button.disabled = true;
+                button.innerHTML = '<span>Sending...</span>';
+                
+                try {
+                    const response = await fetch('/api/friends/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ recipientId: userId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        button.innerHTML = `
+                            <svg class="btn-icon" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            Request Sent
+                        `;
+                        button.classList.remove('btn-primary');
+                        button.classList.add('btn-secondary');
+                        setTimeout(() => {
+                            button.closest('.friend-card').style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error(data.error || 'Failed to send friend request');
+                    }
+                } catch (error) {
+                    console.error('Error sending friend request:', error);
+                    button.innerHTML = `
+                        <svg class="btn-icon" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Add Friend
+                    `;
+                    alert('Failed to send friend request. Please try again.');
+                } finally {
+                    button.disabled = false;
+                }
+            }
+            
+            // Accept friend request
+            else if (e.target.closest('.accept-friend-btn')) {
+                const button = e.target.closest('.accept-friend-btn');
+                const requestId = button.dataset.requestId;
+                
+                button.disabled = true;
+                button.innerHTML = '<span>Accepting...</span>';
+                
+                try {
+                    const response = await fetch('/api/friends/accept', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ friendshipId: requestId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        const requestCard = button.closest('.friend-card');
+                        requestCard.style.display = 'none';
+                        
+                        // Update request count
+                        const countElement = document.getElementById('requestsCount');
+                        const currentCount = parseInt(countElement.textContent);
+                        countElement.textContent = Math.max(0, currentCount - 1);
+                        
+                        // Show success message
+                        alert('Friend request accepted!');
+                    } else {
+                        throw new Error(data.error || 'Failed to accept friend request');
+                    }
+                } catch (error) {
+                    console.error('Error accepting friend request:', error);
+                    button.innerHTML = `
+                        <svg class="btn-icon" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        Accept
+                    `;
+                    alert('Failed to accept friend request. Please try again.');
+                } finally {
+                    button.disabled = false;
+                }
+            }
+            
+            // Decline friend request
+            else if (e.target.closest('.decline-friend-btn')) {
+                const button = e.target.closest('.decline-friend-btn');
+                const requestId = button.dataset.requestId;
+                
+                if (!confirm('Are you sure you want to decline this friend request?')) {
+                    return;
+                }
+                
+                button.disabled = true;
+                button.innerHTML = '<span>Declining...</span>';
+                
+                try {
+                    const response = await fetch('/api/friends/decline', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ friendshipId: requestId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        const requestCard = button.closest('.friend-card');
+                        requestCard.style.display = 'none';
+                        
+                        // Update request count
+                        const countElement = document.getElementById('requestsCount');
+                        const currentCount = parseInt(countElement.textContent);
+                        countElement.textContent = Math.max(0, currentCount - 1);
+                    } else {
+                        throw new Error(data.error || 'Failed to decline friend request');
+                    }
+                } catch (error) {
+                    console.error('Error declining friend request:', error);
+                    button.innerHTML = `
+                        <svg class="btn-icon" viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                        Decline
+                    `;
+                    alert('Failed to decline friend request. Please try again.');
+                } finally {
+                    button.disabled = false;
+                }
+            }
+        });
+        
+        // Search functionality
+        let searchTimeout;
+        const searchInput = document.querySelector('.search-input');
+        const suggestedUsersList = document.getElementById('suggestedUsersList');
+        
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                return;
+            }
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/friends/search?query=${encodeURIComponent(query)}`);
+                    const users = await response.json();
+                    
+                    // Clear current suggestions
+                    suggestedUsersList.innerHTML = '';
+                    
+                    if (users.length > 0) {
+                        users.forEach(user => {
+                            const userCard = document.createElement('div');
+                            userCard.className = 'friend-card';
+                            userCard.dataset.userId = user._id;
+                            
+                            userCard.innerHTML = `
+                                <div class="friend-avatar">
+                                    ${user.username.charAt(0).toUpperCase()}
+                                    ${user.isOnline ? '<div class="online-indicator"></div>' : ''}
+                                </div>
+                                <div class="friend-info">
+                                    <div class="friend-name">${user.username}</div>
+                                    <div class="friend-status">${user.email}</div>
+                                    <div class="mutual-friends" id="mutual-${user._id}">Loading...</div>
+                                </div>
+                                <div class="friend-actions">
+                                    <button class="action-btn btn-primary add-friend-btn" data-user-id="${user._id}">
+                                        <svg class="btn-icon" viewBox="0 0 24 24">
+                                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                        </svg>
+                                        Add Friend
+                                    </button>
+                                </div>
+                            `;
+                            
+                            suggestedUsersList.appendChild(userCard);
+                            
+                            // Load mutual friends for this user
+                            loadMutualFriends(user._id, `mutual-${user._id}`);
+                        });
+                    } else {
+                        suggestedUsersList.innerHTML = `
+                            <div class="empty-state">
+                                <svg class="empty-icon" viewBox="0 0 24 24">
+                                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                                </svg>
+                                <h3>No users found</h3>
+                                <p>Try searching with different keywords</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error searching users:', error);
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

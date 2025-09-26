@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Domz</title>
+    <link rel="stylesheet" href="/css/messages.css">
+    <link rel="icon" href="/img/domz logo without text.png">
+</head>
+<body>
+    <a href="/dashboard" class="nav-link">← Back to Dashboard</a>
+    
+    <div class="container">
+        <!-- Sidebar - User List -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Messages <span class="total-unread-badge" id="totalUnreadBadge" style="display: none;">0</span></h2>
+                <p>Hi, <%= currentUser.username %></p>
+                <button class="mobile-close-btn" id="mobileCloseBtn">✕</button>
+            </div>
+            
+            <div class="user-search">
+                <input type="text" id="userSearch" placeholder="Search users...">
+            </div>
+            
+            <div class="user-list" id="userList">
+                <% users.forEach(user => { %>
+                    <div class="user-item" data-user-id="<%= user._id %>" data-username="<%= user.username %>">
+                        <div class="user-avatar">
+                            <%= user.username.charAt(0).toUpperCase() %>
+                            <% if (user.isOnline) { %>
+                                <div class="online-indicator"></div>
+                            <% } %>
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name"><%= user.username %></div>
+                            <div class="user-status">
+                                <%= user.isOnline ? 'Online' : 'Last seen ' + new Date(user.lastSeen).toLocaleDateString() %>
+                            </div>
+                        </div>
+                        <div class="user-unread-badge" data-user-id="<%= user._id %>" style="display: none;">0</div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <div style="visibility: hidden;" id="welcomeScreen" class="welcome-screen">
+                <div class="welcome-icon">💬</div>
+                <h3>Welcome to Messages</h3>
+                <p>Select a user from the sidebar to start chatting</p>
+            </div>
+            
+            <div id="chatContainer" style="display: none; height: 100%; display: flex; flex-direction: column;">
+                <div class="chat-header" id="chatHeader">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                    <div class="user-avatar" id="chatUserAvatar">U</div>
+                    <div class="chat-user-info">
+                        <h3 id="chatUserName">Select a user</h3>
+                        <div class="chat-user-status" id="chatUserStatus">Online</div>
+                    </div>
+                    <div class="call-controls">
+                        <button class="call-btn" id="voiceCallBtn" title="Voice Call" style="display: none;">
+                            <span>📞</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="messages-container" id="messagesContainer">
+                    <div class="loading" id="loadingMessages">Loading messages...</div>
+                </div>
+                
+                <div class="message-input-area">
+                    <!-- Media Attachment Controls -->
+                    <div class="media-controls" id="mediaControls" style="display: none;">
+                        <div class="media-options">
+                            <button type="button" class="media-btn" id="imageBtn">
+                                <span>📷</span>
+                                <span>Photo</span>
+                            </button>
+                            <button type="button" class="media-btn" id="videoBtn">
+                                <span>📹</span>
+                                <span>Video</span>
+                            </button>
+                            <button type="button" class="media-btn" id="fileBtn">
+                                <span>📎</span>
+                                <span>File</span>
+                            </button>
+                            <button type="button" class="media-btn" id="audioBtn">
+                                <span>🎤</span>
+                                <span>Audio</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Area -->
+                    <div class="file-upload-area" id="fileUploadArea" style="display: none;">
+                        <div class="upload-zone" id="uploadZone">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">
+                                <p><strong>Drop files here</strong> or click to browse</p>
+                                <p class="upload-info">Images, videos, audio, documents up to 50MB</p>
+                            </div>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Uploading...</div>
+                        </div>
+                        <button class="cancel-upload-btn" id="cancelUploadBtn">Cancel</button>
+                    </div>
+
+                    <!-- Audio Recording Controls -->
+                    <div class="audio-recording" id="audioRecording" style="display: none;">
+                        <div class="recording-controls">
+                            <button class="record-btn" id="recordBtn">
+                                <span class="record-icon">🎤</span>
+                            </button>
+                            <div class="recording-info">
+                                <div class="recording-time" id="recordingTime">0:00</div>
+                                <div class="recording-status" id="recordingStatus">Click to start recording</div>
+                            </div>
+                            <button class="stop-record-btn" id="stopRecordBtn" disabled>
+                                <span>⏹️</span>
+                            </button>
+                        </div>
+                        <div class="audio-waveform" id="audioWaveform"></div>
+                        <div class="recording-actions">
+                            <button class="cancel-record-btn" id="cancelRecordBtn">Cancel</button>
+                            <button class="send-record-btn" id="sendRecordBtn" disabled>Send</button>
+                        </div>
+                    </div>
+
+                    <form id="messageForm" class="input-container">
+                        <button type="button" class="attachment-btn" id="attachmentBtn">
+                            <span>📎</span>
+                        </button>
+                        <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                        <button type="submit" class="send-btn" id="sendBtn">
+                            <span>→</span>
+                        </button>
+                    </form>
+
+                    <!-- Hidden file input -->
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip,.rar" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Incoming Call Modal -->
+    <div class="incoming-call-modal" id="incomingCallModal" style="display: none;">
+        <div class="call-modal-content">
+            <div class="caller-info">
+                <div class="caller-avatar" id="callerAvatar">?</div>
+                <div class="caller-details">
+                    <h3 class="caller-name" id="callerName">Unknown Caller</h3>
+                    <p class="call-status">Incoming voice call...</p>
+                </div>
+            </div>
+            <div class="call-actions">
+                <button class="decline-call-btn" id="declineCallBtn">
+                    <span>📵</span>
+                    <span>Decline</span>
+                </button>
+                <button class="accept-call-btn" id="acceptCallBtn">
+                    <span>📞</span>
+                    <span>Accept</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Call Interface -->
+    <div class="active-call-interface" id="activeCallInterface" style="display: none;">
+        <div class="call-interface-content">
+            <div class="call-header">
+                <div class="call-user-info">
+                    <div class="call-user-avatar" id="callUserAvatar">?</div>
+                    <div class="call-user-details">
+                        <h3 class="call-user-name" id="callUserName">Unknown User</h3>
+                        <p class="call-duration" id="callDuration">00:00</p>
+                        <p class="call-connection-status" id="callConnectionStatus">Connecting...</p>
+                    </div>
+                </div>
+                <button class="minimize-call-btn" id="minimizeCallBtn" title="Minimize">
+                    <span>—</span>
+                </button>
+            </div>
+            <div class="call-controls-panel">
+                <button class="mute-btn" id="muteBtn" title="Mute/Unmute">
+                    <span class="unmuted-icon">🎤</span>
+                    <span class="muted-icon" style="display: none;">🎤❌</span>
+                </button>
+                <button class="end-call-btn" id="endCallBtn" title="End Call">
+                    <span>📵</span>
+                </button>
+                <button class="speaker-btn" id="speakerBtn" title="Speaker On/Off">
+                    <span class="speaker-off-icon">🔈</span>
+                    <span class="speaker-on-icon" style="display: none;">🔊</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimized Call Widget -->
+    <div class="minimized-call-widget" id="minimizedCallWidget" style="display: none;">
+        <div class="minimized-call-content">
+            <div class="minimized-user-info">
+                <div class="minimized-avatar" id="minimizedAvatar">?</div>
+                <div class="minimized-details">
+                    <span class="minimized-name" id="minimizedName">Call</span>
+                    <span class="minimized-duration" id="minimizedDuration">00:00</span>
+                </div>
+            </div>
+            <div class="minimized-controls">
+                <button class="minimized-mute-btn" id="minimizedMuteBtn" title="Mute">
+                    <span>🎤</span>
+                </button>
+                <button class="minimized-end-btn" id="minimizedEndBtn" title="End Call">
+                    <span>📵</span>
+                </button>
+                <button class="restore-call-btn" id="restoreCallBtn" title="Restore">
+                    <span>⬆️</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!--js linking-->
+    <script>
+                // Initialize Socket.IO
+                const socket = io();
+        
+        // Current user and chat state
+        const currentUserId = '<%= currentUserId %>';
+        const currentUsername = '<%= currentUser.username %>';
+        let selectedUserId = null;
+        let selectedUsername = null;
+        
+        // DOM elements
+        const userList = document.getElementById('userList');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserStatus = document.getElementById('chatUserStatus');
+        const chatUserAvatar = document.getElementById('chatUserAvatar');
+        const userSearch = document.getElementById('userSearch');
+        
+        // Media attachment elements
+        const attachmentBtn = document.getElementById('attachmentBtn');
+        const mediaControls = document.getElementById('mediaControls');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const audioRecording = document.getElementById('audioRecording');
+        const fileInput = document.getElementById('fileInput');
+        const uploadZone = document.getElementById('uploadZone');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        // Recording elements
+        const recordBtn = document.getElementById('recordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const recordingTime = document.getElementById('recordingTime');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const sendRecordBtn = document.getElementById('sendRecordBtn');
+        const cancelRecordBtn = document.getElementById('cancelRecordBtn');
+        
+        // Media recording variables
+        let mediaRecorder = null;
+        let recordingInterval = null;
+        let recordingStartTime = 0;
+        let recordedBlob = null;
+        let currentUpload = null;
+        
+        // Unread counts and notifications
+        const toastContainer = document.getElementById('toastContainer');
+        const totalUnreadBadge = document.getElementById('totalUnreadBadge');
+        let unreadCounts = {};
+        let totalUnreadCount = 0;
+        
+        // Voice call elements and variables
+        const voiceCallBtn = document.getElementById('voiceCallBtn');
+        const incomingCallModal = document.getElementById('incomingCallModal');
+        const activeCallInterface = document.getElementById('activeCallInterface');
+        const minimizedCallWidget = document.getElementById('minimizedCallWidget');
+        
+        // Call state
+        let currentCall = null;
+        let localStream = null;
+        let remoteStream = null;
+        let peerConnection = null;
+        let isCallActive = false;
+        let isCallMinimized = false;
+        let callStartTime = null;
+        let callTimer = null;
+        let isMuted = false;
+        let isSpeakerOn = false;
+        
+        // WebRTC configuration
+        const rtcConfiguration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+        
+        // IndexedDB setup
+        let db;
+        const initDB = () => {
+            const request = indexedDB.open('ChatDB', 1);
+            
+            request.onerror = () => console.error('IndexedDB error');
+            
+            request.onsuccess = (e) => {
+                db = e.target.result;
+            };
+            
+            request.onupgradeneeded = (e) => {
+                db = e.target.result;
+                
+                // Messages store
+                if (!db.objectStoreNames.contains('messages')) {
+                    const messagesStore = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+                    messagesStore.createIndex('chatId', 'chatId', { unique: false });
+                    messagesStore.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+                
+                // Users store
+                if (!db.objectStoreNames.contains('users')) {
+                    const usersStore = db.createObjectStore('users', { keyPath: '_id' });
+                }
+            };
+        };
+
+        // Save message to IndexedDB
+        const saveMessageToLocal = (message, chatId) => {
+            if (!db) return;
+            
+            const transaction = db.transaction(['messages'], 'readwrite');
+            const store = transaction.objectStore('messages');
+            
+            const localMessage = {
+                ...message,
+                chatId: chatId,
+                timestamp: new Date(message.createdAt).getTime(),
+                synced: true
+            };
+            
+            store.add(localMessage);
+        };
+
+        // Load messages from IndexedDB
+        const loadMessagesFromLocal = (chatId) => {
+            return new Promise((resolve) => {
+                if (!db) {
+                    resolve([]);
+                    return;
+                }
+                
+                const transaction = db.transaction(['messages'], 'readonly');
+                const store = transaction.objectStore('messages');
+                const index = store.index('chatId');
+                const request = index.getAll(chatId);
+                
+                request.onsuccess = () => {
+                    const messages = request.result.sort((a, b) => a.timestamp - b.timestamp);
+                    resolve(messages);
+                };
+                
+                request.onerror = () => resolve([]);
+            });
+        };
+
+        // Initialize IndexedDB
+        initDB();
+        
+        // Socket event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('user-connected', {
+                userId: currentUserId,
+                username: currentUsername
+            });
+            
+            // Load unread counts when connected
+            loadUnreadCounts();
+        });
+        
+        socket.on('user-status-update', (data) => {
+            updateUserStatus(data.userId, data.isOnline, data.lastSeen);
+        });
+        
+        socket.on('new-message', (message) => {
+            const isFromSelectedUser = selectedUserId && message.sender._id === selectedUserId;
+            const isForMe = message.recipient._id === currentUserId;
+            
+            if (selectedUserId && 
+                (message.sender._id === selectedUserId || message.recipient._id === selectedUserId)) {
+                displayMessage(message);
+                const chatId = getChatId(currentUserId, selectedUserId);
+                saveMessageToLocal(message, chatId);
+            }
+            
+            // Handle unread counts and notifications for incoming messages
+            if (isForMe && message.sender._id !== currentUserId) {
+                const senderName = message.sender.username || 'Unknown';
+                
+                // Only increment unread count if not currently viewing this chat
+                if (!isFromSelectedUser) {
+                    incrementUnreadCount(message.sender._id);
+                    showNotificationToast(senderName, message.content, message.messageType);
+                }
+            }
+        });
+        
+        socket.on('message-delivered', (data) => {
+            // Update message delivery status
+            console.log('Message delivered:', data);
+        });
+        
+        // Voice call socket events
+        socket.on('call-invite', (data) => {
+            if (!isCallActive) {
+                showIncomingCallModal(data);
+                
+                // Auto-decline after 30 seconds
+                setTimeout(() => {
+                    if (incomingCallModal.style.display === 'flex') {
+                        declineCall(data);
+                    }
+                }, 30000);
+            } else {
+                // Send busy signal
+                socket.emit('call-busy', { to: data.from });
+            }
+        });
+        
+        socket.on('call-answer', async (data) => {
+            if (peerConnection) {
+                try {
+                    await peerConnection.setRemoteDescription(data.answer);
+                    updateCallStatus('Connected');
+                } catch (error) {
+                    console.error('Error handling call answer:', error);
+                    endCall();
+                }
+            }
+        });
+        
+        socket.on('call-ice-candidate', async (data) => {
+            if (peerConnection) {
+                try {
+                    await peerConnection.addIceCandidate(data.candidate);
+                } catch (error) {
+                    console.error('Error adding ICE candidate:', error);
+                }
+            }
+        });
+        
+        socket.on('call-decline', () => {
+            showNotificationToast('Call Declined', 'The user declined your call', 'text');
+            endCall();
+        });
+        
+        socket.on('call-end', () => {
+            endCall();
+        });
+        
+        socket.on('call-busy', () => {
+            showNotificationToast('User Busy', 'The user is currently on another call', 'text');
+            endCall();
+        });
+        
+        // User selection
+        userList.addEventListener('click', async (e) => {
+            const userItem = e.target.closest('.user-item');
+            if (!userItem) return;
+            
+            // Remove active class from all items
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected item
+            userItem.classList.add('active');
+            
+            // Set selected user
+            selectedUserId = userItem.dataset.userId;
+            selectedUsername = userItem.dataset.username;
+            
+            // Update chat header
+            chatUserName.textContent = selectedUsername;
+            chatUserAvatar.textContent = selectedUsername.charAt(0).toUpperCase();
+            
+            // Show call button
+            voiceCallBtn.style.display = 'block';
+            
+            // Show chat container
+            welcomeScreen.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            
+            // Reset unread count for this user
+            resetUnreadCount(selectedUserId);
+            
+            // Load messages
+            await loadMessages();
+            
+            // Join chat room
+            socket.emit('join-chat', {
+                senderId: currentUserId,
+                recipientId: selectedUserId
+            });
+        });
+        
+        // Load messages for selected user
+        const loadMessages = async () => {
+            if (!selectedUserId) return;
+            
+            const loadingElement = document.getElementById('loadingMessages');
+            loadingElement.style.display = 'block';
+            messagesContainer.innerHTML = '<div class="loading" id="loadingMessages">Loading messages...</div>';
+            
+            try {
+                // First, try to load from IndexedDB
+                const chatId = getChatId(currentUserId, selectedUserId);
+                const localMessages = await loadMessagesFromLocal(chatId);
+                
+                if (localMessages.length > 0) {
+                    messagesContainer.innerHTML = '';
+                    localMessages.forEach(message => {
+                        displayMessage(message);
+                    });
+                }
+                
+                // Then fetch from server
+                const response = await fetch(`/api/messages/${selectedUserId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    messagesContainer.innerHTML = '';
+                    
+                    messages.forEach(message => {
+                        displayMessage(message);
+                        saveMessageToLocal(message, chatId);
+                    });
+                    
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } else {
+                    messagesContainer.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">Error loading messages</div>';
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                messagesContainer.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">Error loading messages</div>';
+            }
+        };
+        
+        // Display a message in the chat
+        const displayMessage = (message) => {
+            const isOwnMessage = message.sender._id === currentUserId;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwnMessage ? 'own' : ''} ${message.messageType !== 'text' ? 'media' : ''}`;
+            
+            const time = new Date(message.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const senderName = message.sender.username || message.sender;
+            const avatarLetter = (typeof senderName === 'string' ? senderName : currentUsername).charAt(0).toUpperCase();
+            
+            let mediaContent = '';
+            let textContent = escapeHtml(message.content);
+            
+            // Handle different message types
+            switch (message.messageType) {
+                case 'image':
+                    mediaContent = `
+                        <div class="media-content">
+                            <img src="${message.filePath}" alt="${escapeHtml(message.fileName || 'Image')}" 
+                                 class="media-image" onclick="openImageModal('${message.filePath}', '${escapeHtml(message.fileName || 'Image')}')">
+                        </div>
+                    `;
+                    textContent = message.fileName || 'Image';
+                    break;
+                    
+                case 'video':
+                    mediaContent = `
+                        <div class="media-content">
+                            <video class="media-video" controls preload="metadata">
+                                <source src="${message.filePath}" type="video/mp4">
+                                Your browser does not support video playback.
+                            </video>
+                        </div>
+                    `;
+                    textContent = message.fileName || 'Video';
+                    break;
+                    
+                case 'audio':
+                    mediaContent = `
+                        <div class="media-content">
+                            <audio class="media-audio" controls>
+                                <source src="${message.filePath}" type="audio/webm">
+                                <source src="${message.filePath}" type="audio/wav">
+                                Your browser does not support audio playback.
+                            </audio>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'file':
+                default:
+                    if (message.messageType !== 'text' && message.filePath) {
+                        const fileExtension = message.fileName ? message.fileName.split('.').pop().toLowerCase() : 'file';
+                        const fileIcon = getFileIcon(fileExtension);
+                        const fileSize = message.fileSize ? formatFileSize(message.fileSize) : '';
+                        
+                        mediaContent = `
+                            <a href="${message.filePath}" class="file-attachment" download="${message.fileName || 'download'}">
+                                <div class="file-icon">${fileIcon}</div>
+                                <div class="file-info">
+                                    <div class="file-name">${escapeHtml(message.fileName || 'File')}</div>
+                                    <div class="file-size">${fileSize}</div>
+                                </div>
+                            </a>
+                        `;
+                        textContent = `📎 ${message.fileName || 'File'}`;
+                    }
+                    break;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarLetter}</div>
+                <div class="message-content">
+                    ${mediaContent}
+                    <div class="message-text">${textContent}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+        
+        // Helper function to get file icon
+        function getFileIcon(extension) {
+            const iconMap = {
+                pdf: '📄',
+                doc: '📝', docx: '📝',
+                txt: '📄',
+                zip: '🗜️', rar: '🗜️',
+                mp3: '🎵', wav: '🎵', ogg: '🎵', m4a: '🎵',
+                mp4: '🎬', avi: '🎬', mov: '🎬', mkv: '🎬',
+                jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️'
+            };
+            return iconMap[extension] || '📎';
+        }
+        
+        // Image modal function
+        function openImageModal(src, alt) {
+            const modal = document.createElement('div');
+            modal.className = 'image-modal';
+            modal.innerHTML = `
+                <div class="modal-backdrop" onclick="closeImageModal()">
+                    <div class="modal-content">
+                        <img src="${src}" alt="${alt}" class="modal-image">
+                        <button class="modal-close" onclick="closeImageModal()">✕</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+        }
+        
+        function closeImageModal() {
+            const modal = document.querySelector('.image-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Unread counts and notification functions
+        async function loadUnreadCounts() {
+            try {
+                const response = await fetch('/api/messages/unread-counts');
+                if (response.ok) {
+                    const data = await response.json();
+                    unreadCounts = data.counts;
+                    totalUnreadCount = data.total;
+                    updateAllUnreadBadges();
+                }
+            } catch (error) {
+                console.error('Error loading unread counts:', error);
+            }
+        }
+        
+        function updateAllUnreadBadges() {
+            // Update total badge in header
+            updateTotalUnreadBadge();
+            
+            // Update individual user badges
+            document.querySelectorAll('.user-unread-badge').forEach(badge => {
+                const userId = badge.dataset.userId;
+                const count = unreadCounts[userId] || 0;
+                updateUserUnreadBadge(userId, count);
+            });
+        }
+        
+        function updateTotalUnreadBadge() {
+            if (totalUnreadCount > 0) {
+                totalUnreadBadge.textContent = totalUnreadCount;
+                totalUnreadBadge.style.display = 'inline-flex';
+            } else {
+                totalUnreadBadge.style.display = 'none';
+            }
+        }
+        
+        function updateUserUnreadBadge(userId, count) {
+            const badge = document.querySelector(`.user-unread-badge[data-user-id="${userId}"]`);
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        function incrementUnreadCount(senderId) {
+            unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
+            totalUnreadCount++;
+            updateAllUnreadBadges();
+        }
+        
+        function resetUnreadCount(userId) {
+            const prevCount = unreadCounts[userId] || 0;
+            if (prevCount > 0) {
+                totalUnreadCount -= prevCount;
+                unreadCounts[userId] = 0;
+                updateAllUnreadBadges();
+            }
+        }
+        
+        function getFirstWords(text, count = 5) {
+            if (!text) return '';
+            const words = text.trim().split(/\s+/);
+            return words.slice(0, count).join(' ') + (words.length > count ? '...' : '');
+        }
+        
+        function showNotificationToast(senderName, messageContent, messageType = 'text') {
+            // Don't show notification if user is already in chat with sender
+            if (selectedUserId && document.querySelector(`[data-user-id="${selectedUserId}"]`)?.dataset.username === senderName) {
+                return;
+            }
+            
+            let displayContent;
+            switch (messageType) {
+                case 'image':
+                    displayContent = '📷 Sent an image';
+                    break;
+                case 'video':
+                    displayContent = '🎥 Sent a video';
+                    break;
+                case 'audio':
+                    displayContent = '🎤 Sent a voice message';
+                    break;
+                case 'file':
+                    displayContent = '📎 Sent a file';
+                    break;
+                default:
+                    displayContent = getFirstWords(messageContent);
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = 'notification-toast';
+            
+            const avatarLetter = senderName.charAt(0).toUpperCase();
+            
+            toast.innerHTML = `
+                <div class="toast-avatar">${avatarLetter}</div>
+                <div class="toast-content">
+                    <div class="toast-sender">${escapeHtml(senderName)}</div>
+                    <div class="toast-message">${escapeHtml(displayContent)}</div>
+                </div>
+                <button class="toast-close" onclick="closeToast(this)">✕</button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    closeToast(toast.querySelector('.toast-close'));
+                }
+            }, 5000);
+        }
+        
+        function closeToast(closeBtn) {
+            const toast = closeBtn.closest('.notification-toast');
+            if (toast) {
+                toast.classList.add('toast-exit');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }
+        
+        // Make closeToast available globally for onclick handlers
+        window.closeToast = closeToast;
+        
+        // Voice Call Functions
+        async function initializeCall(recipientId) {
+            try {
+                // Get user media (audio only)
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    },
+                    video: false 
+                });
+                
+                // Create peer connection
+                peerConnection = new RTCPeerConnection(rtcConfiguration);
+                
+                // Add local stream to peer connection
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+                
+                // Handle remote stream
+                peerConnection.ontrack = (event) => {
+                    remoteStream = event.streams[0];
+                    const remoteAudio = document.createElement('audio');
+                    remoteAudio.srcObject = remoteStream;
+                    remoteAudio.play();
+                    document.body.appendChild(remoteAudio);
+                    
+                    // Update call status
+                    updateCallStatus('Connected');
+                };
+                
+                // Handle ICE candidates
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('call-ice-candidate', {
+                            to: recipientId,
+                            candidate: event.candidate
+                        });
+                    }
+                };
+                
+                // Handle connection state changes
+                peerConnection.onconnectionstatechange = () => {
+                    const state = peerConnection.connectionState;
+                    updateCallStatus(state);
+                    
+                    if (state === 'connected') {
+                        startCallTimer();
+                    } else if (state === 'disconnected' || state === 'failed') {
+                        endCall();
+                    }
+                };
+                
+                return true;
+            } catch (error) {
+                console.error('Error initializing call:', error);
+                showNotificationToast('Error', 'Could not access microphone. Please check permissions.', 'text');
+                return false;
+            }
+        }
+        
+        async function startCall() {
+            if (!selectedUserId) {
+                showNotificationToast('Error', 'No user selected for call', 'text');
+                return;
+            }
+            
+            const success = await initializeCall(selectedUserId);
+            if (!success) return;
+            
+            try {
+                // Create offer
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Send call invitation
+                socket.emit('call-invite', {
+                    to: selectedUserId,
+                    from: currentUserId,
+                    offer: offer,
+                    callerName: currentUsername
+                });
+                
+                currentCall = {
+                    recipientId: selectedUserId,
+                    recipientName: selectedUsername,
+                    type: 'outgoing',
+                    status: 'calling'
+                };
+                
+                showActiveCallInterface();
+                updateCallUI(selectedUsername, 'Calling...');
+                
+            } catch (error) {
+                console.error('Error starting call:', error);
+                endCall();
+            }
+        }
+        
+        async function answerCall(callData) {
+            currentCall = {
+                recipientId: callData.from,
+                recipientName: callData.callerName,
+                type: 'incoming',
+                status: 'connecting'
+            };
+            
+            const success = await initializeCall(callData.from);
+            if (!success) {
+                declineCall(callData);
+                return;
+            }
+            
+            try {
+                // Set remote description
+                await peerConnection.setRemoteDescription(callData.offer);
+                
+                // Create answer
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                // Send answer
+                socket.emit('call-answer', {
+                    to: callData.from,
+                    answer: answer
+                });
+                
+                hideIncomingCallModal();
+                showActiveCallInterface();
+                updateCallUI(callData.callerName, 'Connecting...');
+                
+            } catch (error) {
+                console.error('Error answering call:', error);
+                declineCall(callData);
+            }
+        }
+        
+        function declineCall(callData) {
+            socket.emit('call-decline', {
+                to: callData ? callData.from : (currentCall ? currentCall.recipientId : null)
+            });
+            
+            hideIncomingCallModal();
+            endCall();
+        }
+        
+        function endCall() {
+            // Log the call
+            logCall();
+            
+            // Stop call timer
+            if (callTimer) {
+                clearInterval(callTimer);
+                callTimer = null;
+            }
+            
+            // Close peer connection
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            // Stop local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Remove remote audio elements
+            document.querySelectorAll('audio').forEach(audio => {
+                if (audio.srcObject) {
+                    audio.remove();
+                }
+            });
+            
+            // Send end call signal
+            if (currentCall && currentCall.recipientId) {
+                socket.emit('call-end', {
+                    to: currentCall.recipientId
+                });
+            }
+            
+            // Reset call state
+            currentCall = null;
+            isCallActive = false;
+            isCallMinimized = false;
+            callStartTime = null;
+            isMuted = false;
+            isSpeakerOn = false;
+            
+            // Hide call interfaces
+            hideAllCallInterfaces();
+        }
+        
+        function toggleMute() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    isMuted = !audioTrack.enabled;
+                    updateMuteUI();
+                }
+            }
+        }
+        
+        function toggleSpeaker() {
+            isSpeakerOn = !isSpeakerOn;
+            updateSpeakerUI();
+            // Note: Actual speaker control requires additional browser APIs
+            // This is mainly for UI state
+        }
+        
+        function minimizeCall() {
+            isCallMinimized = true;
+            activeCallInterface.style.display = 'none';
+            minimizedCallWidget.style.display = 'block';
+            updateMinimizedCallUI();
+        }
+        
+        function restoreCall() {
+            isCallMinimized = false;
+            minimizedCallWidget.style.display = 'none';
+            activeCallInterface.style.display = 'block';
+        }
+        
+        function showIncomingCallModal(callData) {
+            const callerAvatar = document.getElementById('callerAvatar');
+            const callerName = document.getElementById('callerName');
+            
+            callerAvatar.textContent = callData.callerName.charAt(0).toUpperCase();
+            callerName.textContent = callData.callerName;
+            
+            // Store call data globally for button handlers
+            window.currentIncomingCall = callData;
+            
+            incomingCallModal.style.display = 'flex';
+            
+            // Play ringtone (if available)
+            playRingtone();
+        }
+        
+        function hideIncomingCallModal() {
+            incomingCallModal.style.display = 'none';
+            stopRingtone();
+        }
+        
+        function showActiveCallInterface() {
+            isCallActive = true;
+            activeCallInterface.style.display = 'block';
+        }
+        
+        function hideAllCallInterfaces() {
+            incomingCallModal.style.display = 'none';
+            activeCallInterface.style.display = 'none';
+            minimizedCallWidget.style.display = 'none';
+        }
+        
+        function updateCallUI(userName, status) {
+            const callUserName = document.getElementById('callUserName');
+            const callUserAvatar = document.getElementById('callUserAvatar');
+            const callConnectionStatus = document.getElementById('callConnectionStatus');
+            
+            if (callUserName) callUserName.textContent = userName;
+            if (callUserAvatar) callUserAvatar.textContent = userName.charAt(0).toUpperCase();
+            if (callConnectionStatus) callConnectionStatus.textContent = status;
+            
+            // Update minimized UI as well
+            updateMinimizedCallUI();
+        }
+        
+        function updateMinimizedCallUI() {
+            if (!currentCall) return;
+            
+            const minimizedName = document.getElementById('minimizedName');
+            const minimizedAvatar = document.getElementById('minimizedAvatar');
+            
+            if (minimizedName) minimizedName.textContent = currentCall.recipientName;
+            if (minimizedAvatar) minimizedAvatar.textContent = currentCall.recipientName.charAt(0).toUpperCase();
+        }
+        
+        function updateCallStatus(status) {
+            const callConnectionStatus = document.getElementById('callConnectionStatus');
+            if (callConnectionStatus) {
+                let displayStatus = status;
+                switch (status) {
+                    case 'connecting':
+                        displayStatus = 'Connecting...';
+                        break;
+                    case 'connected':
+                        displayStatus = 'Connected';
+                        break;
+                    case 'disconnected':
+                        displayStatus = 'Disconnected';
+                        break;
+                    case 'failed':
+                        displayStatus = 'Connection failed';
+                        break;
+                }
+                callConnectionStatus.textContent = displayStatus;
+            }
+        }
+        
+        function startCallTimer() {
+            if (callTimer) return;
+            
+            callStartTime = Date.now();
+            callTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const callDuration = document.getElementById('callDuration');
+                const minimizedDuration = document.getElementById('minimizedDuration');
+                
+                if (callDuration) callDuration.textContent = timeString;
+                if (minimizedDuration) minimizedDuration.textContent = timeString;
+            }, 1000);
+        }
+        
+        function updateMuteUI() {
+            const muteBtn = document.getElementById('muteBtn');
+            const minimizedMuteBtn = document.getElementById('minimizedMuteBtn');
+            const unmutedIcon = document.querySelector('.unmuted-icon');
+            const mutedIcon = document.querySelector('.muted-icon');
+            
+            if (muteBtn) {
+                muteBtn.classList.toggle('muted', isMuted);
+            }
+            
+            if (unmutedIcon && mutedIcon) {
+                unmutedIcon.style.display = isMuted ? 'none' : 'inline';
+                mutedIcon.style.display = isMuted ? 'inline' : 'none';
+            }
+        }
+        
+        function updateSpeakerUI() {
+            const speakerBtn = document.getElementById('speakerBtn');
+            const speakerOffIcon = document.querySelector('.speaker-off-icon');
+            const speakerOnIcon = document.querySelector('.speaker-on-icon');
+            
+            if (speakerBtn) {
+                speakerBtn.classList.toggle('active', isSpeakerOn);
+            }
+            
+            if (speakerOffIcon && speakerOnIcon) {
+                speakerOffIcon.style.display = isSpeakerOn ? 'none' : 'inline';
+                speakerOnIcon.style.display = isSpeakerOn ? 'inline' : 'none';
+            }
+        }
+        
+        function playRingtone() {
+            // Create a simple beep sound using Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                // Repeat every 2 seconds
+                window.ringtoneInterval = setInterval(() => {
+                    if (incomingCallModal.style.display === 'flex') {
+                        const newOscillator = audioContext.createOscillator();
+                        const newGainNode = audioContext.createGain();
+                        
+                        newOscillator.connect(newGainNode);
+                        newGainNode.connect(audioContext.destination);
+                        
+                        newOscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                        newGainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        
+                        newOscillator.start();
+                        newOscillator.stop(audioContext.currentTime + 0.5);
+                    }
+                }, 2000);
+            } catch (error) {
+                console.warn('Could not play ringtone:', error);
+            }
+        }
+        
+        function stopRingtone() {
+            if (window.ringtoneInterval) {
+                clearInterval(window.ringtoneInterval);
+                window.ringtoneInterval = null;
+            }
+        }
+        
+        async function logCall() {
+            if (!currentCall) return;
+            
+            const duration = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+            let status = 'completed';
+            
+            // Determine call status
+            if (duration === 0) {
+                status = currentCall.type === 'incoming' ? 'missed' : 'failed';
+            }
+            
+            try {
+                await fetch('/api/calls/log', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientId: currentCall.recipientId,
+                        type: currentCall.type,
+                        duration: duration,
+                        status: status
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to log call:', error);
+            }
+        }
+        
+        // Send message
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const content = messageInput.value.trim();
+            if (!content || !selectedUserId) return;
+            
+            // Create message object
+            const message = {
+                sender: { _id: currentUserId, username: currentUsername },
+                recipient: { _id: selectedUserId, username: selectedUsername },
+                content: content,
+                createdAt: new Date().toISOString(),
+                messageType: 'text'
+            };
+            
+            // Display message immediately
+            displayMessage(message);
+            
+            // Save to IndexedDB
+            const chatId = getChatId(currentUserId, selectedUserId);
+            saveMessageToLocal(message, chatId);
+            
+            // Send via socket
+            socket.emit('send-message', {
+                senderId: currentUserId,
+                recipientId: selectedUserId,
+                content: content
+            });
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.focus();
+        });
+        
+        // Auto-resize textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+        });
+        
+        // User search functionality
+        userSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const userItems = document.querySelectorAll('.user-item');
+            
+            userItems.forEach(item => {
+                const username = item.dataset.username.toLowerCase();
+                if (username.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Update user online status
+        const updateUserStatus = (userId, isOnline, lastSeen) => {
+            const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+            if (!userItem) return;
+            
+            const avatar = userItem.querySelector('.user-avatar');
+            const statusElement = userItem.querySelector('.user-status');
+            const onlineIndicator = avatar.querySelector('.online-indicator');
+            
+            if (isOnline) {
+                if (!onlineIndicator) {
+                    avatar.innerHTML += '<div class="online-indicator"></div>';
+                }
+                statusElement.textContent = 'Online';
+            } else {
+                if (onlineIndicator) {
+                    onlineIndicator.remove();
+                }
+                statusElement.textContent = `Last seen ${new Date(lastSeen).toLocaleDateString()}`;
+            }
+            
+            // Update chat header if this is the selected user
+            if (selectedUserId === userId) {
+                chatUserStatus.textContent = isOnline ? 'Online' : `Last seen ${new Date(lastSeen).toLocaleDateString()}`;
+            }
+        };
+        
+        // Helper functions
+        const getChatId = (userId1, userId2) => {
+            return [userId1, userId2].sort().join('-');
+        };
+        
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
+        // Handle page visibility for user status
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                socket.emit('user-active', currentUserId);
+            } else {
+                socket.emit('user-inactive', currentUserId);
+            }
+        });
+        
+        // Handle beforeunload
+        window.addEventListener('beforeunload', () => {
+            socket.emit('user-disconnected', currentUserId);
+        });
+        
+        // Media Attachment Functions
+        function toggleMediaControls() {
+            const isVisible = mediaControls.style.display !== 'none';
+            hideAllMediaPanels();
+            if (!isVisible) {
+                mediaControls.style.display = 'block';
+                attachmentBtn.classList.add('active');
+            } else {
+                attachmentBtn.classList.remove('active');
+            }
+        }
+        
+        function hideAllMediaPanels() {
+            mediaControls.style.display = 'none';
+            fileUploadArea.style.display = 'none';
+            audioRecording.style.display = 'none';
+            attachmentBtn.classList.remove('active');
+        }
+        
+        function showFileUpload() {
+            hideAllMediaPanels();
+            fileUploadArea.style.display = 'block';
+        }
+        
+        function showAudioRecording() {
+            hideAllMediaPanels();
+            audioRecording.style.display = 'block';
+        }
+        
+        // File upload functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function validateFile(file) {
+            const maxSize = 50 * 1024 * 1024; // 50MB
+            const allowedTypes = [
+                'image/', 'video/', 'audio/',
+                'application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain', 'application/zip', 'application/x-rar-compressed'
+            ];
+            
+            if (file.size > maxSize) {
+                alert(`File size too large. Maximum size is 50MB. Your file is ${formatFileSize(file.size)}.`);
+                return false;
+            }
+            
+            const isValidType = allowedTypes.some(type => file.type.startsWith(type) || file.type === type);
+            if (!isValidType) {
+                alert('File type not supported. Please select an image, video, audio, or document file.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function uploadFile(file) {
+            if (!selectedUserId || !validateFile(file)) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('recipientId', selectedUserId);
+            
+            // Show progress
+            uploadProgress.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading...';
+            
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressFill.style.width = percentComplete + '%';
+                    progressText.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+                }
+            });
+            
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    const message = response.data;
+                    
+                    // Display the uploaded file message
+                    displayMessage(message);
+                    
+                    // Save to IndexedDB
+                    const chatId = getChatId(currentUserId, selectedUserId);
+                    saveMessageToLocal(message, chatId);
+                    
+                    // Send via socket
+                    socket.emit('file-message', {
+                        senderId: currentUserId,
+                        recipientId: selectedUserId,
+                        message: message
+                    });
+                    
+                    hideAllMediaPanels();
+                } else {
+                    alert('Upload failed. Please try again.');
+                }
+                uploadProgress.style.display = 'none';
+            });
+            
+            xhr.addEventListener('error', () => {
+                alert('Upload failed. Please check your connection and try again.');
+                uploadProgress.style.display = 'none';
+            });
+            
+            currentUpload = xhr;
+            xhr.open('POST', '/api/messages/upload');
+            xhr.send(formData);
+        }
+        
+        // Audio recording functions
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                const chunks = [];
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    chunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(chunks, { type: 'audio/webm' });
+                    sendRecordBtn.disabled = false;
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                recordingStartTime = Date.now();
+                
+                recordBtn.classList.add('recording');
+                recordBtn.disabled = true;
+                stopRecordBtn.disabled = false;
+                recordingStatus.textContent = 'Recording...';
+                
+                recordingInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    recordingTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Could not access microphone. Please check your permissions.');
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                clearInterval(recordingInterval);
+                
+                recordBtn.classList.remove('recording');
+                recordBtn.disabled = false;
+                stopRecordBtn.disabled = true;
+                recordingStatus.textContent = 'Recording completed';
+            }
+        }
+        
+        function cancelRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                clearInterval(recordingInterval);
+            }
+            
+            recordedBlob = null;
+            recordBtn.classList.remove('recording');
+            recordBtn.disabled = false;
+            stopRecordBtn.disabled = true;
+            sendRecordBtn.disabled = true;
+            recordingTime.textContent = '0:00';
+            recordingStatus.textContent = 'Click to start recording';
+            hideAllMediaPanels();
+        }
+        
+        function sendRecording() {
+            if (!recordedBlob || !selectedUserId) return;
+            
+            const formData = new FormData();
+            const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+            
+            formData.append('audio', recordedBlob, 'voice_message.webm');
+            formData.append('recipientId', selectedUserId);
+            formData.append('duration', duration);
+            
+            fetch('/api/messages/upload-audio', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Audio uploaded successfully') {
+                    const message = data.data;
+                    
+                    // Display the audio message
+                    displayMessage(message);
+                    
+                    // Save to IndexedDB
+                    const chatId = getChatId(currentUserId, selectedUserId);
+                    saveMessageToLocal(message, chatId);
+                    
+                    // Send via socket
+                    socket.emit('file-message', {
+                        senderId: currentUserId,
+                        recipientId: selectedUserId,
+                        message: message
+                    });
+                    
+                    cancelRecording();
+                } else {
+                    alert('Failed to send audio message. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading audio:', error);
+                alert('Failed to send audio message. Please try again.');
+            });
+        }
+        
+        // Event Listeners for Media Attachments
+        
+        // Attachment button toggle
+        attachmentBtn.addEventListener('click', toggleMediaControls);
+        
+        // Media option buttons
+        document.getElementById('imageBtn').addEventListener('click', () => {
+            fileInput.accept = 'image/*';
+            fileInput.click();
+        });
+        
+        document.getElementById('videoBtn').addEventListener('click', () => {
+            fileInput.accept = 'video/*';
+            fileInput.click();
+        });
+        
+        document.getElementById('fileBtn').addEventListener('click', () => {
+            fileInput.accept = '.pdf,.doc,.docx,.txt,.zip,.rar';
+            fileInput.click();
+        });
+        
+        document.getElementById('audioBtn').addEventListener('click', showAudioRecording);
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                showFileUpload();
+                files.forEach(uploadFile);
+            }
+            e.target.value = ''; // Reset input
+        });
+        
+        // Upload zone drag and drop
+        uploadZone.addEventListener('click', () => {
+            fileInput.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip,.rar';
+            fileInput.click();
+        });
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+        
+        uploadZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(uploadFile);
+        });
+        
+        // Cancel upload
+        document.getElementById('cancelUploadBtn').addEventListener('click', () => {
+            if (currentUpload) {
+                currentUpload.abort();
+                currentUpload = null;
+            }
+            hideAllMediaPanels();
+        });
+        
+        // Audio recording controls
+        recordBtn.addEventListener('click', startRecording);
+        stopRecordBtn.addEventListener('click', stopRecording);
+        sendRecordBtn.addEventListener('click', sendRecording);
+        cancelRecordBtn.addEventListener('click', cancelRecording);
+        
+        // Close media panels when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.message-input-area') && 
+                !e.target.closest('.media-controls') &&
+                !e.target.closest('.file-upload-area') &&
+                !e.target.closest('.audio-recording')) {
+                hideAllMediaPanels();
+            }
+        });
+        
+        // Voice call event listeners
+        voiceCallBtn.addEventListener('click', startCall);
+        
+        // Incoming call modal
+        document.getElementById('acceptCallBtn').addEventListener('click', () => {
+            const callData = window.currentIncomingCall;
+            if (callData) {
+                answerCall(callData);
+            }
+        });
+        
+        document.getElementById('declineCallBtn').addEventListener('click', () => {
+            const callData = window.currentIncomingCall;
+            declineCall(callData);
+            window.currentIncomingCall = null;
+        });
+        
+        // Active call controls
+        document.getElementById('muteBtn').addEventListener('click', toggleMute);
+        document.getElementById('endCallBtn').addEventListener('click', endCall);
+        document.getElementById('speakerBtn').addEventListener('click', toggleSpeaker);
+        document.getElementById('minimizeCallBtn').addEventListener('click', minimizeCall);
+        
+        // Minimized call controls
+        document.getElementById('minimizedMuteBtn').addEventListener('click', toggleMute);
+        document.getElementById('minimizedEndBtn').addEventListener('click', endCall);
+        document.getElementById('restoreCallBtn').addEventListener('click', restoreCall);
+
+       // Mobile navigation functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.sidebar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileCloseBtn = document.getElementById('mobileCloseBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    function showSidebar() {
+        sidebar.classList.add('show');
+        mobileOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideSidebar() {
+        sidebar.classList.remove('show');
+        mobileOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // Menu button click
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', showSidebar);
+    }
+
+    // Close button click
+    if (mobileCloseBtn) {
+        mobileCloseBtn.addEventListener('click', hideSidebar);
+    }
+
+    // Overlay click to close
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', hideSidebar);
+    }
+
+    // Close sidebar when user is selected on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && e.target.closest('.user-item')) {
+            setTimeout(hideSidebar, 300); // Small delay for better UX
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            hideSidebar();
+        }
+    });
+});
+    </script>
+</body>
+</html>

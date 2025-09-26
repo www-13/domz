@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="icon" href="/img/domz logo without text.png">
+    <title>DOMZ</title>
+    <!--just deisgn-->
+</head>
+<body>
+    <div class="app-container">
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><img width="50px" style="border-radius: 50%;" src="/img/domz logo without text.png" alt=""></div>
+                <span class="logo-text">Domz</span>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link active">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/create-post" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            Create Post
+                    <li class="nav-item">
+                        <a href="/friends" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                            </svg>
+                            Friends
+                        </a>
+                    <li class="nav-item">
+                        <a href="/messages" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                            Messages
+                            <span class="nav-unread-badge" id="navUnreadBadge" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/profile" class="nav-link">
+                            <svg class="nav-icon" viewBox="0 0 24 24">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <% if (currentUser && currentUser.profilePicture) { %>
+                        <img src="<%= currentUser.profilePicture %>" alt="Avatar">
+                    <% } else { %>
+                        <%= (currentUser && currentUser.username ? currentUser.username : username).charAt(0).toUpperCase() %>
+                    <% } %>
+                </div>
+                <h4><%= (currentUser && currentUser.username) || username %></h4>
+                <p>@<%= (currentUser && currentUser.username) || username %></p>
+            </div>
+
+            
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="welcome-text">
+                    <h1>Welcome back, <%= username %>!</h1>
+                    <p>Discover what's happening in your world</p>
+                </div>
+                <a href="/create-post" class="create-post-btn" style="text-decoration: none; color: white;">
+                    Create Post
+                </a>
+            </header>
+
+            <div class="feed-container">
+                <section class="posts-feed" id="postsFeed">
+                    <% if (posts && posts.length > 0) { %>
+                        <% posts.forEach(post => { %>
+                            <article class="post-card" data-post-id="<%= post._id %>">
+                                <div class="post-header">
+                                    <a href="/profile/<%= post.author._id %>" class="post-avatar" title="View profile" style="text-decoration:none;color:inherit;">
+                                        <% if (post.author.profilePicture) { %>
+                                            <img src="<%= post.author.profilePicture %>" alt="<%= post.author.username %>">
+                                        <% } else { %>
+                                            <%= post.author.username.charAt(0).toUpperCase() %>
+                                        <% } %>
+                                    </a>
+                                    <div class="post-info">
+                                        <h3><a href="/profile/<%= post.author._id %>" style="text-decoration:none;color:inherit;"><%= post.author.username %></a></h3>
+                                        <p><%= post.timeAgo %></p>
+                                        <% if (post.timeRemaining !== 'Expired') { %>
+                                            <p class="post-expiry">🕐 <%= post.timeRemaining %></p>
+                                        <% } %>
+                                    </div>
+                                    <% if (post.author._id.toString() === currentUserId.toString()) { %>
+                                        <div class="post-menu">
+                                            <button class="menu-btn" onclick="deletePost('<%= post._id %>')">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <div class="post-content">
+                                    <%= post.content %>
+                                </div>
+                                <% if (post.imageUrl) { %>
+                                    <div class="post-image">
+                                        <img src="<%= post.imageUrl %>" alt="Post image" style="max-width: 100%; border-radius: 12px; margin-top: 12px;">
+                                    </div>
+                                <% } %>
+                                <div class="post-actions">
+                                    <button class="action-btn <%= post.isLikedByUser ? 'liked' : '' %>" onclick="toggleLike('<%= post._id %>')" id="like-<%= post._id %>">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                        </svg>
+                                        <span id="like-count-<%= post._id %>"><%= post.likeCount %></span>
+                                    </button>
+                                    <button class="action-btn" onclick="toggleComments('<%= post._id %>')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                                        </svg>
+                                        <span id="comment-count-<%= post._id %>"><%= post.commentCount %></span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Comments Section -->
+                                <div class="comments-section" id="comments-<%= post._id %>" style="display: none;">
+                                    <div class="comments-list" id="comments-list-<%= post._id %>">
+                                        <% if (post.comments && post.comments.length > 0) { %>
+                                            <% post.comments.forEach(comment => { %>
+                                                <div class="comment">
+                                                    <a href="/profile/<%= comment.user._id %>" class="comment-avatar" title="View profile" style="text-decoration:none;color:inherit;">
+                                                        <% if (comment.user.profilePicture) { %>
+                                                            <img src="<%= comment.user.profilePicture %>" alt="<%= comment.user.username %>">
+                                                        <% } else { %>
+                                                            <%= comment.user.username.charAt(0).toUpperCase() %>
+                                                        <% } %>
+                                                    </a>
+                                                    <div class="comment-content">
+                                                        <strong><a href="/profile/<%= comment.user._id %>" style="text-decoration:none;color:inherit;"> <%= comment.user.username %></a></strong>
+                                                        <p><%= comment.content %></p>
+                                                        <small><%= new Date(comment.createdAt).toLocaleString() %></small>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        <% } %>
+                                    </div>
+                                    <div class="comment-form">
+                                        <input type="text" placeholder="Write a comment..." id="comment-input-<%= post._id %>" onkeypress="handleCommentKeyPress(event, '<%= post._id %>')">
+                                        <button onclick="addComment('<%= post._id %>')">Send</button>
+                                    </div>
+                                </div>
+                            </article>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="no-posts">
+                            <h3>No posts yet!</h3>
+                            <p>Be the first to share something with your friends.</p>
+                            <a href="/create-post" class="create-first-post-btn">Create Your First Post</a>
+                        </div>
+                    <% } %>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="/dashboard" class="mobile-nav-item active">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span class="mobile-nav-text">Home</span>
+            </a>
+            <a href="/create-post" class="mobile-nav-item">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                <span class="mobile-nav-text">Create Post</span>
+            </a>
+            <a href="/friends" class="mobile-nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-1c0-1.1.9-2 2-2s2 .9 2 2v1h8v-1c0-1.1.9-2 2-2s2 .9 2 2v1h2v2H2v-2h2zm5.5-3c.83 0 1.5-.67 1.5-1.5S10.33 12 9.5 12 8 12.67 8 13.5 8.67 15 9.5 15zm5 0c.83 0 1.5-.67 1.5-1.5S15.33 12 14.5 12 13 12.67 13 13.5 13.67 15 14.5 15z"/>
+                </svg>
+                <span class="mobile-nav-text">Friends</span>
+            </a>
+            <a href="/messages" class="mobile-nav-item">
+                <div class="mobile-nav-icon-container">
+                    <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    <span class="mobile-nav-unread-badge" id="mobileNavUnreadBadge" style="display: none;">0</span>
+                </div>
+                <span class="mobile-nav-text">Messages</span>
+            </a>
+            <a href="/profile" class="mobile-nav-item">
+                <svg class="mobile-nav-icon" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <span class="mobile-nav-text">Profile</span>
+            </a>
+        </div>
+    </nav>
+    
+    <!-- JavaScript for interactive functionality -->
+    <script src="/js/script.js"></script>
+</body>
+</html>
